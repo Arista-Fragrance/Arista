@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ARISTA - Tienda Online</title>
+<style>
+  /* RESET */
+  * {
+    box-sizing: border-box;
+    margin: 0; padding: 0;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fafafa;
+    color: #222;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  header {
+    background-color: #111;
+    color: #fefefe;
+    padding: 18px 30px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 1100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.8rem;
+    letter-spacing: 1.1px;
+    user-select: none;
+    cursor: pointer;
+  }
+  header img.logo {
+    height: 36px;
+  }
+  .sidebar {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 220px;
+    height: calc(100vh - 70px);
+    background: #fff;
+    border-right: 1px solid #ddd;
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.07);
+  }
+  .sidebar button {
+    background: none;
+    border: none;
+    padding: 18px 30px;
+    font-size: 1.2rem;
+    text-align: left;
+    color: #555;
+    cursor: pointer;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    font-weight: 600;
+    border-left: 5px solid transparent;
+  }
+  .sidebar button.active,
+  .sidebar button:hover {
+    color: #111;
+    background-color: #f0f0f0;
+    border-left: 5px solid #111;
+  }
+  main.main {
+    margin-left: 220px;
+    padding: 100px 40px 90px;
+    min-height: calc(100vh - 70px);
+    background: #fff;
+    overflow-y: auto;
+  }
+  .products {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    max-width: 720px;
+    margin: auto;
+  }
+  @media(min-width: 650px){
+    .products {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+    }
+  }
+  @media(min-width: 900px){
+    .products {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+  }
+  .product {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 0 0 transparent;
+    padding: 20px 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    border: 1px solid #eee;
+    transition: box-shadow 0.3s ease;
+  }
+  .product:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  }
+  .product img {
+    width: 100%;
+    height: 220px;
+    object-fit: contain;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    background-color: #fff;
+  }
+  .product h3 {
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+    color: #111;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.7px;
+  }
+  .product p.price {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #222;
+    margin-bottom: 18px;
+    letter-spacing: 0.8px;
+  }
+  .product button {
+    background-color: #111;
+    border: none;
+    color: #fefefe;
+    padding: 14px 0;
+    width: 100%;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
+  .product button:hover {
+    background-color: #333;
+  }
+
+  /* Carrito botón esquina */
+  #cartBtn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background: #111;
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    cursor: pointer;
+    box-shadow: 0 0 10px #0009 inset;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 26px;
+    z-index: 1200;
+    user-select: none;
+  }
+  #cartBtn:hover {
+    background: #333;
+  }
+
+  /* Carrito modal */
+  #cartModal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45);
+    justify-content: center;
+    align-items: center;
+    z-index: 2500;
+    user-select: none;
+  }
+  #cartContent {
+    background: #fff;
+    padding: 30px 35px;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    color: #222;
+    font-weight: 600;
+  }
+  #cartContent h2 {
+    font-size: 2rem;
+    margin-bottom: 25px;
+    color: #111;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  #cartItems div {
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  #cartItems div img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    border-radius: 8px;
+    flex-shrink: 0;
+    border: 1px solid #ccc;
+  }
+  #cartItems div span.name {
+    flex: 1;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #111;
+    margin-left: 10px;
+  }
+  #cartItems div span.qty {
+    width: 40px;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #444;
+  }
+  #cartItems div button {
+    background: #333;
+    border: none;
+    color: #eee;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: background-color 0.3s ease;
+    user-select: none;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #cartItems div button:hover {
+    background: #555;
+  }
+  #cartTotal {
+    font-size: 1.6rem;
+    margin-top: 30px;
+    color: #111;
+    font-weight: 700;
+    text-align: right;
+    letter-spacing: 0.7px;
+  }
+  #checkout {
+    margin-top: 35px;
+    background: #111;
+    color: #fefefe;
+    border: none;
+    padding: 16px 0;
+    width: 100%;
+    font-weight: 800;
+    font-size: 1.3rem;
+    cursor: pointer;
+    border-radius: 15px;
+    transition: background-color 0.3s ease;
+    user-select: none;
+    box-shadow: 0 0 18px #000 inset;
+  }
+  #checkout:hover {
+    background-color: #333;
+  }
+  #cartContent button.close-btn {
+    margin-top: 25px;
+    background: #777;
+    color: #fefefe;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    padding: 14px 0;
+    border-radius: 15px;
+    user-select: none;
+  }
+  #cartContent button.close-btn:hover {
+    background: #999;
+  }
+
+  /* Sección pago */
+  #buyInstructions {
+    display: none;
+    padding: 140px 40px 100px;
+    text-align: center;
+    background: #fff;
+    color: #222;
+    min-height: 100vh;
+    font-weight: 600;
+    user-select: none;
+  }
+  #buyInstructions h3 {
+    font-size: 2.4rem;
+    margin-bottom: 40px;
+    color: #111;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+  }
+  #buyInstructions p {
+    margin-bottom: 24px;
+    font-size: 1.25rem;
+    color: #555;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+    letter-spacing: 0.6px;
+  }
+  #buyInstructions button {
+    background-color: #111;
+    border: none;
+    padding: 16px 50px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #eee;
+    border-radius: 30px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 0 20px #000 inset;
+    margin-top: 40px;
+  }
+  #buyInstructions button:hover {
+    background-color: #333;
+  }
+
+  /* Pantalla producto detalle */
+  #productDetail {
+    display: none;
+    padding: 100px 40px 90px;
+    background: #fff;
+    min-height: calc(100vh - 70px);
+    margin-left: 220px;
+    user-select: none;
+    max-width: 700px;
+  }
+  #productDetail img {
+    width: 100%;
+    max-width: 480px;
+    max-height: 360px;
+    object-fit: contain;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    background-color: #fff;
+  }
+  #productDetail h2 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 18px;
+    color: #111;
+  }
+  #productDetail p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    max-width: 600px;
+    margin-bottom: 40px;
+    color: #444;
+  }
+  #productDetail table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+  }
+  #productDetail table, #productDetail th, #productDetail td {
+    border: 1px solid #ccc;
+  }
+  #productDetail th, #productDetail td {
+    padding: 8px 12px;
+    text-align: left;
+  }
+  #productDetail button {
+    background-color: #111;
+    color: #fefefe;
+    border: none;
+    padding: 16px 45px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    border-radius: 30px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    box-shadow: none !important;
+    margin-right: 15px;
+  }
+  #productDetail button:hover {
+    background-color: #333;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    main.main, #productDetail {
+      margin-left: 0;
+      padding: 90px 25px 80px;
+      max-width: 100%;
+    }
+    .sidebar {
+      position: relative;
+      width: 100%;
+      height: auto;
+      border-right: none;
+      flex-direction: row;
+      padding: 15px 10px;
+      justify-content: center;
+      gap: 18px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      background: #fff;
+    }
+    .sidebar button {
+      flex: 1;
+      text-align: center;
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      font-size: 1rem;
+      padding: 12px 10px;
+      color: #444;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: all 0.25s ease;
+    }
+    .sidebar button.active,
+    .sidebar button:hover {
+      border-left: none;
+      border-bottom: 3px solid #111;
+      background-color: transparent;
+      color: #111;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .products {
+      grid-template-columns: 1fr;
+      gap: 18px;
+      max-width: 100%;
+    }
+    .product img {
+      height: 200px;
+    }
+    #cartContent {
+      max-width: 95vw;
+      max-height: 75vh;
+    }
+    #buyInstructions {
+      padding: 80px 15px 80px;
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header id="homeBtn">
+  <img src="https://cdn-icons-png.flaticon.com/512/263/263142.png" alt="Arista Logo" class="logo" />
+  ARISTA
+</header>
+
+<div class="sidebar" id="sectionMenu">
+  <!-- Secciones serán generadas por JS -->
+</div>
+
+<main class="main" id="productGrid">
+  <!-- Productos generados por JS -->
+</main>
+
+<div id="productDetail">
+  <img src="" alt="Detalle producto" id="detailImage" />
+  <h2 id="detailTitle"></h2>
+  <p id="detailDescription"></p>
+  <table id="detailTable">
+    <!-- Tabla editable por código -->
+  </table>
+  <button id="detailAddCart">Agregar al carrito</button>
+  <button id="detailClose">Cerrar</button>
+</div>
+
+<div id="cartBtn" title="Ver carrito">🛒</div>
+
+<div id="cartModal">
+  <div id="cartContent">
+    <h2>Carrito de Compras</h2>
+    <div id="cartItems">
+      <!-- Items del carrito -->
+    </div>
+    <div id="cartTotal">Total: $0.00</div>
+    <button id="checkout">Pagar</button>
+    <button class="close-btn" id="closeCart">Cerrar</button>
+  </div>
+</div>
+
+<div id="buyInstructions">
+  <h3>Instrucciones para el pago</h3>
+  <p>Para completar tu compra, por favor realiza la transferencia a la siguiente cuenta bancaria:</p>
+  <p><strong>Banco:</strong> Banco Ejemplo S.A.</p>
+  <p><strong>Cuenta:</strong> 1234567890</p>
+  <p><strong>CLABE:</strong> 012345678901234567</p>
+  <p><strong>Beneficiario:</strong> ARISTA Tienda Online</p>
+  <p>Después de hacer el pago, envía tu comprobante a <em>ventas@arista.com</em>.</p>
+  <button id="confirmPayment">Confirmar Pago</button>
+</div>
+
+<script>
+(() => {
+  // DATOS
+  const sections = [
+    { id: 'animales', name: 'TRALALA' },
+    { id: 'frutas', name: 'Frutas' },
+    { id: 'vehiculos', name: 'Vehículos' },
+    { id: 'tecnologia', name: 'Tecnología' },
+  ];
+
+  // 80 productos, 20 por sección (con imagen real por URL)
+  const products = [
+    // Animales 20
+    {id:1, section:'animales', name:'JPG Le Male Elixir', price: 550, desc:'Esta bn vergas compralo', img:'https://ss701.liverpool.com.mx/xl/1138944090.jpg',
+      tableData:[['Color','Dorado'],['Notas','Bergamota alv'],['Linea','Le Male']]},
+    {id:2, section:'animales', name:'JPG Le Beau Le Parfum', price: 2129, desc:'Compralo esta bn vergas we.', img:'https://ss701.liverpool.com.mx/xl/1118712974.jpg',
+      tableData:[['Color','Azul'],['Notas','Nse we'],['Linea','Le Beau']]},
+    {id:3, section:'animales', name:'Pájaro', price: 220, desc:'Pájaro exótico colorido.', img:'https://loremflickr.com/400/300/bird',
+      tableData:[['Color','Multicolor'],['Tamaño','Pequeño'],['Edad','1 año']]},
+    {id:4, section:'animales', name:'Caballo', price: 1500, desc:'Caballo fuerte y rápido.', img:'https://loremflickr.com/400/300/horse',
+      tableData:[['Color','Negro'],['Tamaño','Grande'],['Edad','5 años']]},
+    {id:5, section:'animales', name:'Conejo', price: 300, desc:'Conejo blanco y suave.', img:'https://loremflickr.com/400/300/rabbit',
+      tableData:[['Color','Blanco'],['Tamaño','Pequeño'],['Edad','1 año']]},
+    {id:6, section:'animales', name:'Tortuga', price: 180, desc:'Tortuga de río.', img:'https://loremflickr.com/400/300/turtle',
+      tableData:[['Color','Verde'],['Tamaño','Mediano'],['Edad','10 años']]},
+    {id:7, section:'animales', name:'Loro', price: 600, desc:'Loro parlante.', img:'https://loremflickr.com/400/300/parrot',
+      tableData:[['Color','Verde'],['Tamaño','Mediano'],['Edad','4 años']]},
+    {id:8, section:'animales', name:'León', price: 3500, desc:'Rey de la selva.', img:'https://loremflickr.com/400/300/lion',
+      tableData:[['Color','Dorado'],['Tamaño','Grande'],['Edad','6 años']]},
+    {id:9, section:'animales', name:'Delfín', price: 2700, desc:'Delfín juguetón.', img:'https://loremflickr.com/400/300/dolphin',
+      tableData:[['Color','Gris'],['Tamaño','Mediano'],['Edad','8 años']]},
+    {id:10, section:'animales', name:'Oso', price: 3300, desc:'Oso pardo.', img:'https://loremflickr.com/400/300/bear',
+      tableData:[['Color','Marrón'],['Tamaño','Grande'],['Edad','7 años']]},
+    {id:11, section:'animales', name:'Cebra', price: 1900, desc:'Cebra rayada.', img:'https://loremflickr.com/400/300/zebra',
+      tableData:[['Color','Blanco y negro'],['Tamaño','Grande'],['Edad','5 años']]},
+    {id:12, section:'animales', name:'Elefante', price: 5000, desc:'Elefante gigante.', img:'https://loremflickr.com/400/300/elephant',
+      tableData:[['Color','Gris'],['Tamaño','Muy grande'],['Edad','15 años']]},
+    {id:13, section:'animales', name:'Pingüino', price: 1500, desc:'Pingüino simpático.', img:'https://loremflickr.com/400/300/penguin',
+      tableData:[['Color','Blanco y negro'],['Tamaño','Pequeño'],['Edad','3 años']]},
+    {id:14, section:'animales', name:'Serpiente', price: 900, desc:'Serpiente venenosa.', img:'https://loremflickr.com/400/300/snake',
+      tableData:[['Color','Verde'],['Tamaño','Mediano'],['Edad','4 años']]},
+    {id:15, section:'animales', name:'Águila', price: 2300, desc:'Águila majestuosa.', img:'https://loremflickr.com/400/300/eagle',
+      tableData:[['Color','Marrón'],['Tamaño','Mediano'],['Edad','6 años']]},
+    {id:16, section:'animales', name:'Canguro', price: 2200, desc:'Canguro saltarín.', img:'https://loremflickr.com/400/300/kangaroo',
+      tableData:[['Color','Marrón claro'],['Tamaño','Grande'],['Edad','5 años']]},
+    {id:17, section:'animales', name:'Mono', price: 1300, desc:'Mono travieso.', img:'https://loremflickr.com/400/300/monkey',
+      tableData:[['Color','Marrón'],['Tamaño','Mediano'],['Edad','4 años']]},
+    {id:18, section:'animales', name:'Tigre', price: 3900, desc:'Tigre feroz.', img:'https://loremflickr.com/400/300/tiger',
+      tableData:[['Color','Naranja con rayas'],['Tamaño','Grande'],['Edad','7 años']]},
+    {id:19, section:'animales', name:'Pez Payaso', price: 400, desc:'Colorido pez payaso.', img:'https://loremflickr.com/400/300/clownfish',
+      tableData:[['Color','Naranja y blanco'],['Tamaño','Pequeño'],['Edad','1 año']]},
+    {id:20, section:'animales', name:'Mariposa', price: 150, desc:'Mariposa hermosa.', img:'https://loremflickr.com/400/300/butterfly',
+      tableData:[['Color','Multicolor'],['Tamaño','Pequeño'],['Edad','N/A']]},
+
+    // Frutas 20
+    {id:21, section:'frutas', name:'Manzana', price: 25, desc:'Manzana roja y fresca.', img:'https://loremflickr.com/400/300/apple',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','México']]},
+    {id:22, section:'frutas', name:'Plátano', price: 18, desc:'Plátano amarillo maduro.', img:'https://loremflickr.com/400/300/banana',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','Ecuador']]},
+    {id:23, section:'frutas', name:'Naranja', price: 30, desc:'Naranja jugosa.', img:'https://loremflickr.com/400/300/orange',
+      tableData:[['Tipo','Fruta'],['Sabor','Cítrico'],['Origen','España']]},
+    {id:24, section:'frutas', name:'Fresa', price: 40, desc:'Fresas frescas.', img:'https://loremflickr.com/400/300/strawberry',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','México']]},
+    {id:25, section:'frutas', name:'Kiwi', price: 35, desc:'Kiwi verde.', img:'https://loremflickr.com/400/300/kiwi',
+      tableData:[['Tipo','Fruta'],['Sabor','Ácido'],['Origen','Nueva Zelanda']]},
+    {id:26, section:'frutas', name:'Piña', price: 45, desc:'Piña tropical.', img:'https://loremflickr.com/400/300/pineapple',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','Costa Rica']]},
+    {id:27, section:'frutas', name:'Uvas', price: 50, desc:'Uvas moradas.', img:'https://loremflickr.com/400/300/grapes',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','Chile']]},
+    {id:28, section:'frutas', name:'Sandía', price: 55, desc:'Sandía refrescante.', img:'https://loremflickr.com/400/300/watermelon',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','México']]},
+    {id:29, section:'frutas', name:'Melón', price: 48, desc:'Melón dulce.', img:'https://loremflickr.com/400/300/melon',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','España']]},
+    {id:30, section:'frutas', name:'Cereza', price: 60, desc:'Cereza roja.', img:'https://loremflickr.com/400/300/cherry',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','EEUU']]},
+    {id:31, section:'frutas', name:'Mango', price: 50, desc:'Mango maduro.', img:'https://loremflickr.com/400/300/mango',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','India']]},
+    {id:32, section:'frutas', name:'Papaya', price: 38, desc:'Papaya fresca.', img:'https://loremflickr.com/400/300/papaya',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','México']]},
+    {id:33, section:'frutas', name:'Limón', price: 20, desc:'Limón ácido.', img:'https://loremflickr.com/400/300/lemon',
+      tableData:[['Tipo','Fruta'],['Sabor','Ácido'],['Origen','México']]},
+    {id:34, section:'frutas', name:'Aguacate', price: 70, desc:'Aguacate cremoso.', img:'https://loremflickr.com/400/300/avocado',
+      tableData:[['Tipo','Fruta'],['Sabor','Neutro'],['Origen','México']]},
+    {id:35, section:'frutas', name:'Coco', price: 45, desc:'Coco tropical.', img:'https://loremflickr.com/400/300/coconut',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','Tailandia']]},
+    {id:36, section:'frutas', name:'Mandarina', price: 30, desc:'Mandarina fresca.', img:'https://loremflickr.com/400/300/tangerine',
+      tableData:[['Tipo','Fruta'],['Sabor','Cítrico'],['Origen','España']]},
+    {id:37, section:'frutas', name:'Granada', price: 40, desc:'Granada deliciosa.', img:'https://loremflickr.com/400/300/pomegranate',
+      tableData:[['Tipo','Fruta'],['Sabor','Ácido'],['Origen','Irán']]},
+    {id:38, section:'frutas', name:'Frambuesa', price: 55, desc:'Frambuesas frescas.', img:'https://loremflickr.com/400/300/raspberry',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','Canadá']]},
+    {id:39, section:'frutas', name:'Arándano', price: 60, desc:'Arándanos ricos.', img:'https://loremflickr.com/400/300/blueberry',
+      tableData:[['Tipo','Fruta'],['Sabor','Ácido'],['Origen','EEUU']]},
+    {id:40, section:'frutas', name:'Chirimoya', price: 50, desc:'Chirimoya dulce.', img:'https://loremflickr.com/400/300/custardapple',
+      tableData:[['Tipo','Fruta'],['Sabor','Dulce'],['Origen','Perú']]},
+
+    // Vehículos 20
+    {id:41, section:'vehiculos', name:'Bicicleta', price: 1200, desc:'Bicicleta para ciudad.', img:'https://loremflickr.com/400/300/bicycle',
+      tableData:[['Tipo','Transporte'],['Color','Negra'],['Velocidad','25 km/h']]},
+    {id:42, section:'vehiculos', name:'Motocicleta', price: 3500, desc:'Motocicleta deportiva.', img:'https://loremflickr.com/400/300/motorbike',
+      tableData:[['Tipo','Transporte'],['Color','Roja'],['Velocidad','120 km/h']]},
+    {id:43, section:'vehiculos', name:'Automóvil', price: 15000, desc:'Automóvil familiar.', img:'https://loremflickr.com/400/300/car',
+      tableData:[['Tipo','Transporte'],['Color','Blanco'],['Velocidad','180 km/h']]},
+    {id:44, section:'vehiculos', name:'Camión', price: 25000, desc:'Camión de carga.', img:'https://loremflickr.com/400/300/truck',
+      tableData:[['Tipo','Transporte'],['Color','Azul'],['Velocidad','100 km/h']]},
+    {id:45, section:'vehiculos', name:'Tren', price: 50000, desc:'Tren de pasajeros.', img:'https://loremflickr.com/400/300/train',
+      tableData:[['Tipo','Transporte'],['Color','Gris'],['Velocidad','250 km/h']]},
+    {id:46, section:'vehiculos', name:'Avión', price: 150000, desc:'Avión comercial.', img:'https://loremflickr.com/400/300/airplane',
+      tableData:[['Tipo','Transporte'],['Color','Blanco'],['Velocidad','800 km/h']]},
+    {id:47, section:'vehiculos', name:'Barco', price: 80000, desc:'Barco de carga.', img:'https://loremflickr.com/400/300/ship',
+      tableData:[['Tipo','Transporte'],['Color','Azul'],['Velocidad','60 km/h']]},
+    {id:48, section:'vehiculos', name:'Taxi', price: 12000, desc:'Taxi amarillo.', img:'https://loremflickr.com/400/300/taxi',
+      tableData:[['Tipo','Transporte'],['Color','Amarillo'],['Velocidad','150 km/h']]},
+    {id:49, section:'vehiculos', name:'Scooter', price: 2000, desc:'Scooter eléctrico.', img:'https://loremflickr.com/400/300/scooter',
+      tableData:[['Tipo','Transporte'],['Color','Negro'],['Velocidad','40 km/h']]},
+    {id:50, section:'vehiculos', name:'Helicóptero', price: 90000, desc:'Helicóptero privado.', img:'https://loremflickr.com/400/300/helicopter',
+      tableData:[['Tipo','Transporte'],['Color','Blanco'],['Velocidad','250 km/h']]},
+    {id:51, section:'vehiculos', name:'Caravana', price: 30000, desc:'Caravana para viajes.', img:'https://loremflickr.com/400/300/caravan',
+      tableData:[['Tipo','Transporte'],['Color','Blanco'],['Velocidad','120 km/h']]},
+    {id:52, section:'vehiculos', name:'Camioneta', price: 22000, desc:'Camioneta robusta.', img:'https://loremflickr.com/400/300/pickup',
+      tableData:[['Tipo','Transporte'],['Color','Roja'],['Velocidad','160 km/h']]},
+    {id:53, section:'vehiculos', name:'Monopatín', price: 350, desc:'Monopatín para niños.', img:'https://loremflickr.com/400/300/skateboard',
+      tableData:[['Tipo','Transporte'],['Color','Multicolor'],['Velocidad','15 km/h']]},
+    {id:54, section:'vehiculos', name:'Metro', price: 60000, desc:'Metro urbano.', img:'https://loremflickr.com/400/300/metro',
+      tableData:[['Tipo','Transporte'],['Color','Gris'],['Velocidad','80 km/h']]},
+    {id:55, section:'vehiculos', name:'Patineta eléctrica', price: 850, desc:'Patineta moderna.', img:'https://loremflickr.com/400/300/electricskateboard',
+      tableData:[['Tipo','Transporte'],['Color','Negro'],['Velocidad','35 km/h']]},
+    {id:56, section:'vehiculos', name:'Tractor', price: 27000, desc:'Tractor agrícola.', img:'https://loremflickr.com/400/300/tractor',
+      tableData:[['Tipo','Transporte'],['Color','Verde'],['Velocidad','40 km/h']]},
+    {id:57, section:'vehiculos', name:'Remolque', price: 9000, desc:'Remolque para carga.', img:'https://loremflickr.com/400/300/trailer',
+      tableData:[['Tipo','Transporte'],['Color','Blanco'],['Velocidad','80 km/h']]},
+    {id:58, section:'vehiculos', name:'Segway', price: 1500, desc:'Segway para ciudad.', img:'https://loremflickr.com/400/300/segway',
+      tableData:[['Tipo','Transporte'],['Color','Negro'],['Velocidad','20 km/h']]},
+    {id:59, section:'vehiculos', name:'Cuatrimoto', price: 9000, desc:'Cuatrimoto para campo.', img:'https://loremflickr.com/400/300/quadbike',
+      tableData:[['Tipo','Transporte'],['Color','Roja'],['Velocidad','70 km/h']]},
+    {id:60, section:'vehiculos', name:'Trineo', price: 500, desc:'Trineo para nieve.', img:'https://loremflickr.com/400/300/sled',
+      tableData:[['Tipo','Transporte'],['Color','Rojo'],['Velocidad','10 km/h']]},
+
+    // Tecnología 20
+    {id:61, section:'tecnologia', name:'Laptop', price: 15000, desc:'Laptop potente para trabajo.', img:'https://loremflickr.com/400/300/laptop',
+      tableData:[['Procesador','Intel i7'],['RAM','16GB'],['Almacenamiento','512GB SSD']]},
+    {id:62, section:'tecnologia', name:'Smartphone', price: 9000, desc:'Smartphone de última generación.', img:'https://loremflickr.com/400/300/smartphone',
+      tableData:[['Pantalla','6.5 pulgadas'],['Cámara','48MP'],['Batería','4000mAh']]},
+    {id:63, section:'tecnologia', name:'Tablet', price: 6500, desc:'Tablet para entretenimiento.', img:'https://loremflickr.com/400/300/tablet',
+      tableData:[['Pantalla','10 pulgadas'],['RAM','4GB'],['Almacenamiento','128GB']]},
+    {id:64, section:'tecnologia', name:'Auriculares', price: 1500, desc:'Auriculares inalámbricos.', img:'https://loremflickr.com/400/300/headphones',
+      tableData:[['Tipo','Bluetooth'],['Autonomía','8 horas'],['Color','Negro']]},
+    {id:65, section:'tecnologia', name:'Smartwatch', price: 3500, desc:'Smartwatch deportivo.', img:'https://loremflickr.com/400/300/smartwatch',
+      tableData:[['Pantalla','OLED'],['Batería','2 días'],['Funciones','Monitor de ritmo cardíaco']]},
+    {id:66, section:'tecnologia', name:'Teclado', price: 800, desc:'Teclado mecánico.', img:'https://loremflickr.com/400/300/keyboard',
+      tableData:[['Tipo','Mecánico'],['Conectividad','USB'],['Color','Negro']]},
+    {id:67, section:'tecnologia', name:'Mouse', price: 650, desc:'Mouse óptico.', img:'https://loremflickr.com/400/300/mouse',
+      tableData:[['Tipo','Óptico'],['Conectividad','USB'],['Color','Blanco']]},
+    {id:68, section:'tecnologia', name:'Monitor', price: 4500, desc:'Monitor 4K.', img:'https://loremflickr.com/400/300/monitor',
+      tableData:[['Resolución','3840x2160'],['Tamaño','27 pulgadas'],['Tipo','LED']]},
+    {id:69, section:'tecnologia', name:'Impresora', price: 3200, desc:'Impresora multifuncional.', img:'https://loremflickr.com/400/300/printer',
+      tableData:[['Tipo','Laser'],['Color','Blanco'],['Velocidad','20 ppm']]},
+    {id:70, section:'tecnologia', name:'Cámara', price: 7500, desc:'Cámara digital.', img:'https://loremflickr.com/400/300/camera',
+      tableData:[['Resolución','24MP'],['Lente','50mm'],['Tipo','DSLR']]},
+    {id:71, section:'tecnologia', name:'Router', price: 1800, desc:'Router Wi-Fi 6.', img:'https://loremflickr.com/400/300/router',
+      tableData:[['Velocidad','1200 Mbps'],['Bandas','Dual Band'],['Color','Negro']]},
+    {id:72, section:'tecnologia', name:'Disco Duro', price: 2000, desc:'Disco duro externo 2TB.', img:'https://loremflickr.com/400/300/harddrive',
+      tableData:[['Capacidad','2TB'],['Tipo','Externo'],['Interfaz','USB 3.0']]},
+    {id:73, section:'tecnologia', name:'Proyector', price: 6000, desc:'Proyector HD.', img:'https://loremflickr.com/400/300/projector',
+      tableData:[['Resolución','1080p'],['Brillo','2500 lúmenes'],['Conectividad','HDMI']]},
+    {id:74, section:'tecnologia', name:'Altavoz', price: 1200, desc:'Altavoz Bluetooth.', img:'https://loremflickr.com/400/300/speaker',
+      tableData:[['Potencia','20W'],['Batería','10 horas'],['Color','Negro']]},
+    {id:75, section:'tecnologia', name:'Consola', price: 8000, desc:'Consola de videojuegos.', img:'https://loremflickr.com/400/300/gameconsole',
+      tableData:[['Capacidad','1TB'],['Resolución','4K'],['Accesorios','2 controles']]},
+    {id:76, section:'tecnologia', name:'USB', price: 300, desc:'Memoria USB 64GB.', img:'https://loremflickr.com/400/300/usb',
+      tableData:[['Capacidad','64GB'],['Conectividad','USB 3.0'],['Color','Azul']]},
+    {id:77, section:'tecnologia', name:'Cargador', price: 400, desc:'Cargador rápido.', img:'https://loremflickr.com/400/300/charger',
+      tableData:[['Potencia','30W'],['Tipo','USB-C'],['Color','Blanco']]},
+    {id:78, section:'tecnologia', name:'Tablet Gráfica', price: 2500, desc:'Tablet para dibujo digital.', img:'https://loremflickr.com/400/300/graphics',
+      tableData:[['Área activa','10x6 pulgadas'],['Resolución','5080 LPI'],['Color','Negro']]},
+    {id:79, section:'tecnologia', name:'Smart TV', price: 12000, desc:'Smart TV 55 pulgadas.', img:'https://loremflickr.com/400/300/smarttv',
+      tableData:[['Resolución','4K'],['Conectividad','Wi-Fi, HDMI'],['Tamaño','55 pulgadas']]},
+    {id:80, section:'tecnologia', name:'Micrófono', price: 900, desc:'Micrófono profesional.', img:'https://loremflickr.com/400/300/microphone',
+      tableData:[['Tipo','Condensador'],['Conectividad','XLR'],['Color','Negro']]},
+  ];
+
+  // Variables globales
+  let currentSection = sections[0].id;
+  let cart = {};
+
+  // DOM refs
+  const sectionMenu = document.getElementById('sectionMenu');
+  const productGrid = document.getElementById('productGrid');
+  const cartBtn = document.getElementById('cartBtn');
+  const cartModal = document.getElementById('cartModal');
+  const cartContent = document.getElementById('cartContent');
+  const cartItemsContainer = document.getElementById('cartItems');
+  const cartTotal = document.getElementById('cartTotal');
+  const checkoutBtn = document.getElementById('checkout');
+  const closeCartBtn = document.getElementById('closeCart');
+
+  const productDetail = document.getElementById('productDetail');
+  const detailImage = document.getElementById('detailImage');
+  const detailTitle = document.getElementById('detailTitle');
+  const detailDescription = document.getElementById('detailDescription');
+  const detailTable = document.getElementById('detailTable');
+  const detailAddCart = document.getElementById('detailAddCart');
+  const detailClose = document.getElementById('detailClose');
+
+  const buyInstructions = document.getElementById('buyInstructions');
+  const confirmPaymentBtn = document.getElementById('confirmPayment');
+
+  const header = document.querySelector('header');
+
+  // Funciones
+
+  // Genera el menú lateral
+  function renderMenu() {
+    sectionMenu.innerHTML = '';
+    sections.forEach(sec => {
+      const btn = document.createElement('button');
+      btn.textContent = sec.name;
+      btn.dataset.id = sec.id;
+      if (sec.id === currentSection) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        currentSection = sec.id;
+        renderMenu();
+        renderProducts();
+        hideAllScreens();
+        productGrid.style.display = 'grid';
+      });
+      sectionMenu.appendChild(btn);
+    });
+  }
+
+  // Muestra productos según sección
+  function renderProducts() {
+    productGrid.innerHTML = '';
+    const filtered = products.filter(p => p.section === currentSection);
+    filtered.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.innerHTML = `
+        <img src="${p.img}" alt="${p.name}" data-id="${p.id}" />
+        <h3>${p.name}</h3>
+        <p class="price">$${p.price.toFixed(2)}</p>
+        <button data-id="${p.id}">Agregar al carrito</button>
+      `;
+      // Evento imagen para abrir detalle
+      div.querySelector('img').addEventListener('click', () => openProductDetail(p.id));
+      // Evento boton agregar al carrito
+      div.querySelector('button').addEventListener('click', () => addToCart(p.id));
+      productGrid.appendChild(div);
+    });
+  }
+
+  // Abrir detalle producto
+  function openProductDetail(id) {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+    detailImage.src = product.img;
+    detailImage.alt = product.name;
+    detailTitle.textContent = product.name;
+    detailDescription.textContent = product.desc;
+
+    // Render tabla
+    detailTable.innerHTML = '';
+    product.tableData.forEach(row => {
+      const tr = document.createElement('tr');
+      const th = document.createElement('th');
+      const td = document.createElement('td');
+      th.textContent = row[0];
+      td.textContent = row[1];
+      tr.appendChild(th);
+      tr.appendChild(td);
+      detailTable.appendChild(tr);
+    });
+
+    // Agregar evento boton agregar al carrito
+    detailAddCart.onclick = () => {
+      addToCart(product.id);
+      closeProductDetail();
+    };
+
+    // Mostrar pantalla detalle
+    hideAllScreens();
+    productDetail.style.display = 'block';
+  }
+
+  // Cerrar detalle producto
+  function closeProductDetail() {
+    productDetail.style.display = 'none';
+    productGrid.style.display = 'grid';
+  }
+
+  // Añadir producto al carrito
+  function addToCart(id) {
+    if (!cart[id]) cart[id] = 0;
+    cart[id]++;
+    renderCart();
+  }
+
+  // Renderizar carrito
+  function renderCart() {
+    cartItemsContainer.innerHTML = '';
+    let total = 0;
+    for (const id in cart) {
+      if (cart[id] <= 0) continue;
+      const product = products.find(p => p.id == id);
+      if (!product) continue;
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'cart-item';
+      itemDiv.innerHTML = `
+        <img src="${product.img}" alt="${product.name}" />
+        <div class="cart-item-info">
+          <div>${product.name}</div>
+          <div>$${product.price.toFixed(2)}</div>
+          <div>
+            <button class="cart-minus" data-id="${id}">-</button>
+            <span>${cart[id]}</span>
+            <button class="cart-plus" data-id="${id}">+</button>
+          </div>
+        </div>
+      `;
+      cartItemsContainer.appendChild(itemDiv);
+      total += product.price * cart[id];
+    }
+    cartTotal.textContent = `Total: $${total.toFixed(2)}`;
+    // Eventos botones sumar/restar
+    cartItemsContainer.querySelectorAll('.cart-minus').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        if (cart[id] > 1) {
+          cart[id]--;
+        } else {
+          delete cart[id];
+        }
+        renderCart();
+      };
+    });
+    cartItemsContainer.querySelectorAll('.cart-plus').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        cart[id]++;
+        renderCart();
+      };
+    });
+  }
+
+  // Mostrar carrito
+  cartBtn.addEventListener('click', () => {
+    hideAllScreens();
+    renderCart();
+    cartModal.style.display = 'flex';
+  });
+
+  // Cerrar carrito
+  closeCartBtn.addEventListener('click', () => {
+    cartModal.style.display = 'none';
+    productGrid.style.display = 'grid';
+  });
+
+  // Mostrar instrucciones de pago
+  checkoutBtn.addEventListener('click', () => {
+    hideAllScreens();
+    buyInstructions.style.display = 'block';
+  });
+
+  // Confirmar pago
+  confirmPaymentBtn.addEventListener('click', () => {
+    buyInstructions.innerHTML = '<h3>Gracias por tu compra!</h3><p>Tu pago ha sido confirmado. Nos pondremos en contacto contigo pronto.</p>';
+  });
+
+  // Función para ocultar todas las pantallas
+  function hideAllScreens() {
+    productGrid.style.display = 'none';
+    productDetail.style.display = 'none';
+    cartModal.style.display = 'none';
+    buyInstructions.style.display = 'none';
+  }
+
+  // Botón home recarga página
+  header.addEventListener('click', () => {
+    location.reload();
+  });
+
+  // Inicializar menú y productos
+  renderMenu();
+  renderProducts();
+
+})();
+</script>
+
+</body>
+</html>
